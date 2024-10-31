@@ -17,17 +17,17 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func main() {
-	r := gin.Default()
-
-	r.Use(cors.New(cors.Config{
+func configureCors() cors.Config {
+	return cors.Config{
 		AllowAllOrigins:  true,
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
-	}))
+	}
+}
 
+func initializeRoutes(r *gin.Engine) {
 	metrics := r.Group("/metrics")
 	{
 		metrics.GET("/system", hostinfo.GetSystemInfo)
@@ -39,6 +39,15 @@ func main() {
 		metrics.GET("/sensors", sensorinfo.GetSensorInfo)
 		metrics.GET("/gpu", gpuinfo.GetGpuInfo)
 	}
+}
+
+func main() {
+	gin.SetMode(gin.ReleaseMode)
+
+	r := gin.Default()
+	r.Use(cors.New(configureCors()))
+
+	initializeRoutes(r)
 
 	port := os.Getenv("PORT")
 	if port == "" {
